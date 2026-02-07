@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio - Design & Couleurs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CHOISISSEZ VOTRE THÈME ICI --- */
+
+        /* OPTION 1 : GALERIE D'ART (Modifié : Sans filtre noir et blanc) */
+        :root {
+            --bg-color: #ffffff;       /* Blanc Pur */
+            --text-main: #111111;      /* Noir Profond */
+            --text-secondary: #666666; /* Gris Moyen */
+            --accent: #111111;         /* Accent Noir */
+            --line-color: rgba(0, 0, 0, 0.1); /* Lignes grises */
+            
+            /* J'ai mis "none" ici pour enlever le filtre */
+            --img-filter: none; 
+        }
+
+        /* --- 2. RESTE DU STYLE --- */
+        :root {
+            --font-title: 'Cinzel', serif;
+            --font-text: 'Montserrat', sans-serif;
+            --transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-text);
+            font-weight: 300;
+            transition: background 0.5s, color 0.5s;
+        }
+
+        /* HEADER */
+        header {
+            text-align: center; padding: 120px 20px 60px;
+            max-width: 800px; margin: 0 auto;
+            animation: fadeIn 1.5s ease-out;
+        }
+        @keyframes fadeIn { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+
+        .brand-name {
+            font-size: 0.8rem; letter-spacing: 6px; text-transform: uppercase;
+            color: var(--accent); font-weight: 600; margin-bottom: 25px; display: block;
+        }
+
+        h1 {
+            font-family: var(--font-title); font-size: 4rem; margin: 0;
+            font-weight: 400; line-height: 1.1; color: var(--text-main);
+        }
+
+        .subtitle {
+            margin-top: 30px; font-size: 1rem; color: var(--text-secondary);
+            max-width: 500px; margin: 0 auto; line-height: 1.8;
+        }
+
+        .divider {
+            width: 1px; height: 60px; background-color: var(--accent);
+            margin: 50px auto 40px; opacity: 0.5;
+        }
+
+        /* GRILLE */
+        .portfolio-container {
+            max-width: 1100px; margin: 0 auto; padding: 0 5% 120px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 80px;
+        }
+
+        .project-card { text-decoration: none; color: inherit; display: block; }
+
+        .img-frame {
+            height: 350px; overflow: hidden; position: relative;
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .project-card img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: var(--transition);
+            /* Le filtre est désactivé ici */
+            filter: none; 
+        }
+
+        .project-card:hover img {
+            transform: scale(1.05); /* Garde uniquement le zoom */
+        }
+
+        .card-info {
+            padding-top: 25px; border-top: 1px solid var(--line-color); margin-top: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .project-category {
+            font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase;
+            color: var(--text-secondary); margin-bottom: 5px; display: block;
+        }
+
+        .project-title {
+            font-family: var(--font-title); font-size: 1.6rem; margin: 0;
+            color: var(--text-main);
+        }
+
+        .view-btn {
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+            color: var(--text-main); position: relative; padding-bottom: 5px;
+        }
+
+        .view-btn::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 0%; height: 1px;
+            background-color: var(--accent); transition: width 0.4s ease;
+        }
+
+        .project-card:hover .view-btn::after { width: 100%; }
+
+        /* FOOTER */
+        footer {
+            text-align: center; padding: 60px 20px; border-top: 1px solid var(--line-color);
+            font-size: 0.8rem; color: var(--text-secondary); letter-spacing: 1px;
+        }
+        footer a { color: var(--text-main); text-decoration: none; transition:0.3s; }
+        footer a:hover { color: var(--accent); }
+
+        /* MOBILE */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.8rem; }
+            .portfolio-container { grid-template-columns: 1fr; gap: 60px; }
+            .card-info { flex-direction: column; text-align: center; }
+            .img-frame { height: 260px; }
+            .view-btn { margin-top: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span class="brand-name">Portfolio & Design</span>
+        <h1>Creative<br>Vision</h1>
+        <p class="subtitle">A collection of digital projects crafted with precision, elegance, and simplicity.</p>
+        <div class="divider"></div>
+    </header>
+
+    <main class="portfolio-container">
+
+        <a href="netttoyage.html" target="_blank" class="project-card">
+            <div class="img-frame">
+                <img src="images/Capture d’écran 2026-02-06 185852.png" alt="Mode">
+            </div>
+            <div class="card-info">
+                <div>
+                    <span class="project-category">1</span>
+                    <h2 class="project-title">Cleaning Website</h2>
+                </div>
+                <div class="view-btn">View</div>
+            </div>
+        </a>
+
+        <a href="resturent.html" target="_blank" class="project-card">
+            <div class="img-frame">
+                <img src="images/Capture d’écran 2026-02-04 215542.png" alt="Intérieur">
+            </div>
+            <div class="card-info">
+                <div>
+                    <span class="project-category">2</span>
+                    <h2 class="project-title">Restaurant Website</h2>
+                </div>
+                <div class="view-btn">View</div>
+            </div>
+        </a>
+
+        <a href="dontiste.html" target="_blank" class="project-card">
+            <div class="img-frame">
+                <img src="images/Capture d’écran 2026-02-04 215240.png" alt="Tech">
+            </div>
+            <div class="card-info">
+                <div>
+                    <span class="project-category">3</span>
+                    <h2 class="project-title">Dentist Website</h2>
+                </div>
+                <div class="view-btn">View</div>
+            </div>
+        </a>
+
+        <a href="index.html" target="_blank" class="project-card">
+            <div class="img-frame">
+                <img src="images/Capture d’écran 2026-02-07 121748.png" alt="Agence">
+            </div>
+            <div class="card-info">
+                <div>
+                    <span class="project-category">4</span>
+                    <h2 class="project-title">About Me</h2>
+                </div>
+                <div class="view-btn">View</div>
+            </div>
+        </a>
+
+    </main>
+
+    <footer>
+        <p>© 2024 Design Portfolio.</p>
+        <p><a href="rayanebouber@email.com">Envoyer un email</a></p>
+    </footer>
+
+</body>
+</html>
