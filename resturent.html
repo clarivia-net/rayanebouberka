@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'ASTRANCE | Beyond Dining</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Manrope:wght@200;300;400&display=swap" rel="stylesheet">
+    <style>
+        /* --- CONFIGURATION --- */
+        :root {
+            --bg: #050505;
+            --text: #e0e0e0;
+            --gold: #D4AF37;
+            --gold-dim: #8a7038;
+            --easing: cubic-bezier(0.65, 0, 0.35, 1); /* Very smooth animation */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Manrope', sans-serif;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        /* --- GRAIN & TEXTURE --- */
+        .noise {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9000; opacity: 0.04;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* --- CURSOR (PC Only) --- */
+        @media (min-width: 769px) {
+            * { cursor: none; }
+            #cursor {
+                position: fixed; top: 0; left: 0; width: 10px; height: 10px;
+                background: var(--gold); border-radius: 50%;
+                transform: translate(-50%, -50%); pointer-events: none; z-index: 10000;
+                mix-blend-mode: difference; transition: transform 0.2s;
+            }
+            #cursor-follower {
+                position: fixed; top: 0; left: 0; width: 40px; height: 40px;
+                border: 1px solid rgba(212, 175, 55, 0.5); border-radius: 50%;
+                transform: translate(-50%, -50%); pointer-events: none; z-index: 9999;
+                transition: transform 0.1s ease-out;
+            }
+            /* Click effect */
+            body.clicking #cursor { transform: translate(-50%, -50%) scale(0.5); }
+            body.clicking #cursor-follower { transform: translate(-50%, -50%) scale(1.5); }
+        }
+        @media (max-width: 768px) { #cursor, #cursor-follower { display: none; } }
+
+        /* --- LOADER --- */
+        .loader {
+            position: fixed; inset: 0; background: #000; z-index: 20000;
+            display: flex; justify-content: center; align-items: center;
+            transition: transform 1.2s var(--easing);
+        }
+        .loader span {
+            display: block; overflow: hidden;
+            font-family: 'Cinzel', serif; font-size: 3rem; color: var(--gold); letter-spacing: 5px;
+        }
+        .loader.hidden { transform: translateY(-100%); }
+
+        /* --- TYPOGRAPHY --- */
+        h1, h2, h3, .serif { font-family: 'Cinzel', serif; font-weight: 400; text-transform: uppercase; }
+        .gold { color: var(--gold); }
+        
+        /* --- HEADER & NAV BUTTON --- */
+        nav {
+            position: fixed; top: 0; width: 100%; padding: 2rem 3rem;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 5000; mix-blend-mode: difference;
+        }
+        .logo { font-size: 1.5rem; letter-spacing: 3px; font-weight: 600; color: #fff; z-index: 5001; }
+        
+        .menu-toggle {
+            cursor: pointer; font-family: 'Manrope'; text-transform: uppercase; letter-spacing: 2px;
+            font-size: 0.9rem; color: #fff; z-index: 5001; position: relative;
+        }
+        .menu-toggle::after {
+            content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 1px;
+            background: #fff; transform: scaleX(0); transform-origin: right; transition: transform 0.4s var(--easing);
+        }
+        .menu-toggle:hover::after { transform: scaleX(1); transform-origin: left; }
+
+        /* --- FULL SCREEN MENU OVERLAY --- */
+        .menu-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: #080808; z-index: 4000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.6s var(--easing);
+        }
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+        
+        .menu-links { list-style: none; text-align: center; }
+        .menu-links li { overflow: hidden; margin-bottom: 1rem; }
+        .menu-links a {
+            display: block; font-family: 'Cinzel'; font-size: 4rem; color: #333;
+            text-decoration: none; transform: translateY(100%); transition: 0.6s var(--easing);
+        }
+        .menu-overlay.active .menu-links a { transform: translateY(0); color: #555; }
+        .menu-links a:hover { color: var(--gold); }
+        
+        /* Menu appearance delays */
+        .menu-overlay.active li:nth-child(1) a { transition-delay: 0.1s; }
+        .menu-overlay.active li:nth-child(2) a { transition-delay: 0.2s; }
+        .menu-overlay.active li:nth-child(3) a { transition-delay: 0.3s; }
+        .menu-overlay.active li:nth-child(4) a { transition-delay: 0.4s; }
+
+        /* --- HERO SECTION (SLIDESHOW BACKGROUND) --- */
+        .hero {
+            height: 100vh; position: relative; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+        }
+        
+        /* Hero background images style */
+        .hero-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; 
+            opacity: 0; /* Hidden by default */
+            filter: contrast(1.2) brightness(0.7) grayscale(30%); /* Dark filter */
+            transform: scale(1.05);
+            transition: opacity 1.5s ease-in-out; /* Smooth transition */
+            z-index: 0;
+        }
+        
+        /* Active visible image */
+        .hero-bg.active {
+            opacity: 0.5;
+            z-index: 1;
+        }
+
+        .hero-content { z-index: 2; color: #fff; mix-blend-mode: normal; }
+        .hero-title {
+            font-size: 9vw; line-height: 0.9; opacity: 0; transform: translateY(50px);
+            animation: textUp 1.2s 1s forwards var(--easing);
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .hero-sub {
+            letter-spacing: 8px; font-size: 1rem; margin-bottom: 2rem; color: var(--gold);
+            opacity: 0; animation: textUp 1.2s 1.2s forwards var(--easing);
+            font-weight: 600;
+        }
+        @keyframes textUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* --- MARQUEE --- */
+        .marquee {
+            padding: 2rem 0; border-top: 1px solid #222; border-bottom: 1px solid #222;
+            background: #0a0a0a; overflow: hidden; white-space: nowrap;
+        }
+        .marquee-inner { display: inline-block; animation: scroll 20s linear infinite; }
+        .marquee span {
+            font-family: 'Cinzel'; font-size: 3rem; color: #222; margin-right: 4rem;
+            -webkit-text-stroke: 1px #444; text-transform: uppercase;
+        }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* --- SECTIONS --- */
+        .section { padding: 8rem 10%; }
+        .reveal { opacity: 0; transform: translateY(50px); transition: 1s var(--easing); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
+        .about-text h2 { font-size: 3.5rem; margin-bottom: 1.5rem; }
+        .about-text p { color: #888; line-height: 1.8; margin-bottom: 2rem; }
+
+        /* --- SLIDESHOW SECTION 1 (ABOUT) --- */
+        .slideshow-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            overflow: hidden;
+        }
+        
+        .slide {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out; 
+            filter: grayscale(100%) contrast(1.2);
+            z-index: 1;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            z-index: 2;
+        }
+
+        /* Circle Button */
+        .circle-btn {
+            width: 150px; height: 150px; border: 1px solid var(--gold); border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            text-decoration: none; color: var(--gold); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px;
+            transition: 0.4s;
+        }
+        .circle-btn:hover { background: var(--gold); color: #000; transform: scale(0.95); }
+
+        /* --- MENU IMAGE REVEAL --- */
+        .menu-list { margin-top: 4rem; }
+        .menu-item {
+            display: flex; justify-content: space-between; align-items: baseline;
+            padding: 2.5rem 0; border-bottom: 1px solid #222; transition: 0.4s; position: relative; z-index: 5;
+        }
+        .menu-item:hover { padding-left: 2rem; padding-right: 2rem; background: #0a0a0a; }
+        .menu-item:hover .item-name { color: var(--gold); }
+        
+        .item-name { font-family: 'Cinzel'; font-size: 2.5rem; transition: 0.3s; }
+        .item-price { font-family: 'Manrope'; font-size: 1.2rem; color: #666; }
+
+        /* Floating Image */
+        .floating-img {
+            position: fixed; width: 280px; height: 350px; object-fit: cover;
+            top: 0; left: 0; pointer-events: none; opacity: 0; z-index: 1;
+            transform: scale(0.8) rotate(-5deg); transition: transform 0.4s, opacity 0.4s;
+        }
+        .menu-item:hover ~ .floating-img { opacity: 1; transform: scale(1) rotate(0deg); }
+        .floating-img.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+        /* --- CONTACT --- */
+        .contact-section { background: #080808; text-align: center; }
+        .form-box { max-width: 600px; margin: 3rem auto 0; text-align: left; }
+        .input-line {
+            width: 100%; background: none; border: none; border-bottom: 1px solid #333;
+            padding: 1rem 0; color: #fff; font-family: 'Manrope'; font-size: 1.2rem; outline: none; margin-bottom: 2rem;
+            transition: 0.3s;
+        }
+        .input-line:focus { border-color: var(--gold); }
+
+        /* --- FOOTER --- */
+        .main-footer {
+            background: #050505;
+            border-top: 1px solid #222;
+            padding-top: 6rem;
+            padding-bottom: 4rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1.5fr; /* Asymmetric grid */
+            gap: 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        /* Footer Typography */
+        .footer-logo {
+            font-size: 2rem;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            letter-spacing: 2px;
+        }
+
+        .footer-tagline {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: auto;
+        }
+
+        .footer-heading {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            margin-bottom: 2rem;
+            opacity: 0.8;
+        }
+
+        .footer-col p {
+            color: #888;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* Links */
+        .footer-link {
+            text-decoration: none;
+            color: #ccc;
+            transition: 0.3s;
+            position: relative;
+            display: inline-block;
+        }
+        .footer-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0;
+            width: 0%; height: 1px;
+            background: var(--gold);
+            transition: 0.3s var(--easing);
+        }
+        .footer-link:hover { color: var(--gold); }
+        .footer-link:hover::after { width: 100%; }
+
+        /* Minimalist Newsletter Form */
+        .footer-form {
+            display: flex;
+            width: 100%;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        .footer-form:focus-within { border-bottom-color: var(--gold); }
+
+        .footer-input {
+            background: none;
+            border: none;
+            color: #fff;
+            font-family: 'Manrope';
+            width: 100%;
+            outline: none;
+        }
+        .footer-btn {
+            background: none;
+            border: none;
+            color: var(--gold);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+        .footer-btn:hover { transform: translateX(5px); }
+
+        /* Social Links */
+        .social-links {
+            display: flex;
+            gap: 2rem;
+            margin-top: auto;
+        }
+        .social-links a {
+            color: #fff;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            text-decoration: none;
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+        .social-links a:hover { opacity: 1; color: var(--gold); }
+
+        /* Copyright */
+        .footer-copyright {
+            margin-top: 4rem;
+            color: #333;
+            font-size: 0.75rem;
+        }
+        .mobile-only { display: none; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 900px) {
+            .footer-content { grid-template-columns: 1fr 1fr; gap: 3rem; }
+        }
+
+        @media (max-width: 768px) {
+            nav { padding: 1.5rem; }
+            .hero-title { font-size: 14vw; }
+            .section { padding: 5rem 5%; }
+            .about-grid { grid-template-columns: 1fr; }
+            .item-name { font-size: 1.5rem; }
+            .menu-links a { font-size: 2.5rem; }
+            .circle-btn { width: 120px; height: 120px; margin: 0 auto; }
+            .text-block { text-align: center; }
+            .menu-item:hover { padding: 2.5rem 0; background: transparent; }
+            .floating-img { display: none !important; }
+            
+            /* Responsive Slideshow */
+            .slideshow-container { height: 400px; margin-top: 3rem; }
+
+            /* Mobile Footer */
+            .footer-content { grid-template-columns: 1fr; text-align: center; gap: 4rem; }
+            .footer-col { align-items: center; }
+            .footer-form { width: 80%; margin: 0 auto 2rem; }
+            .social-links { margin-top: 2rem; }
+            .desktop-only { display: none; }
+            .mobile-only { display: block; margin-top: 3rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="noise"></div>
+    
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+
+    <div class="loader">
+        <span>L'ASTRANCE</span>
+    </div>
+
+    <div class="menu-overlay" id="menuOverlay">
+        <ul class="menu-links">
+            <li><a href="#hero" onclick="toggleMenu()">Home</a></li>
+            <li><a href="#about" onclick="toggleMenu()">Philosophy</a></li>
+            <li><a href="#menu" onclick="toggleMenu()">The Menu</a></li>
+            <li><a href="#contact" onclick="toggleMenu()">Reservations</a></li>
+        </ul>
+    </div>
+
+    <nav>
+        <div class="logo hover-trigger">L'ASTRANCE</div>
+        <div class="menu-toggle hover-trigger" onclick="toggleMenu()">MENU +</div>
+    </nav>
+
+    <header class="hero" id="hero">
+        
+        <img src="images/pexels-collab-media-173741945-27612505.jpg" 
+             class="hero-bg active" alt="Ambiance">
+        
+        <img src="images/pexels-masoodaslami-17240977.jpg" 
+             class="hero-bg" alt="Dining Room">
+
+        <img src="images/pexels-bertellifotografia-17315452.jpg" 
+             class="hero-bg" alt="Food Art">
+             
+        <img src="images/pexels-christian-bolanos-2158732257-35566543.jpg" 
+             class="hero-bg" alt="Chef">
+
+        <div class="hero-content">
+            <p class="hero-sub">SENSORY GASTRONOMY</p>
+            <h1 class="hero-title">The Art of <br>Sublime</h1>
+        </div>
+    </header>
+
+    <div class="marquee">
+        <div class="marquee-inner">
+            <span>Excellence • Rare Wines • Culinary Art • Paris • </span>
+            <span>Excellence • Rare Wines • Culinary Art • Paris • </span>
+            <span>Excellence • Rare Wines • Culinary Art • Paris • </span>
+            <span>Excellence • Rare Wines • Culinary Art • Paris • </span>
+        </div>
+    </div>
+
+    <section class="section" id="about">
+        <div class="about-grid">
+            <div class="about-text text-block reveal">
+                <h2>Shadow & <br><span class="gold">Light</span></h2>
+                <p>We do not merely serve food. We tell a story. A story of earth, fire, and passion. In a unique architectural setting, experience a moment suspended in time.</p>
+                <br>
+                <a href="#menu" class="circle-btn hover-trigger">
+                    Discover
+                </a>
+            </div>
+            
+            <div class="slideshow-container reveal delay-200">
+                <img src="https://images.unsplash.com/photo-1518779578993-ec3579fd3920?q=80&w=800&auto=format&fit=crop" class="slide active" alt="Dish 1">
+                <img src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?q=80&w=800&auto=format&fit=crop" class="slide" alt="Ambiance">
+                <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=800&auto=format&fit=crop" class="slide" alt="Dish 2">
+            </div>
+
+        </div>
+    </section>
+
+    <section class="section" id="menu">
+        <div style="text-align: center; margin-bottom: 4rem;" class="reveal">
+            <p style="color:var(--gold); letter-spacing: 3px; font-size: 0.9rem;">SIGNATURE</p>
+        </div>
+
+        <img src="" class="floating-img" id="floatingImg">
+
+        <div class="menu-list">
+            <div class="menu-item reveal hover-trigger" data-img="https://images.unsplash.com/photo-1550966871-3ed3c47e2ce2?ixlib=rb-4.0.3&w=600">
+                <span class="item-name">Smoked Scallops</span>
+                <span class="item-price">42€</span>
+            </div>
+            <div class="menu-item reveal hover-trigger" data-img="https://images.unsplash.com/photo-1551024709-8f23befc6f87?ixlib=rb-4.0.3&w=600">
+                <span class="item-name">Duck with Black Orange</span>
+                <span class="item-price">65€</span>
+            </div>
+            <div class="menu-item reveal hover-trigger" data-img="https://images.unsplash.com/photo-1563379926898-05f4575a45d8?ixlib=rb-4.0.3&w=600">
+                <span class="item-name">Imperial Caviar</span>
+                <span class="item-price">120€</span>
+            </div>
+            <div class="menu-item reveal hover-trigger" data-img="https://images.unsplash.com/photo-1579954115545-a95591f28bfc?ixlib=rb-4.0.3&w=600">
+                <span class="item-name">Black Forest</span>
+                <span class="item-price">28€</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="section contact-section" id="contact">
+        <h2 class="reveal" style="font-size: 3rem;">Your <span class="gold">Table</span></h2>
+        
+        <form class="form-box" onsubmit="event.preventDefault(); alert('Request sent');">
+            <div class="reveal">
+                <input type="text" placeholder="NAME" class="input-line hover-trigger" required>
+            </div>
+            <div class="reveal delay-100">
+                <input type="number" placeholder="GUESTS" class="input-line hover-trigger" min="1" required>
+            </div>
+            <div class="reveal delay-200">
+                <input type="date" class="input-line hover-trigger" required>
+            </div>
+            
+            <button class="circle-btn hover-trigger reveal delay-300" style="margin: 3rem auto 0; background: transparent; border-color: #fff; color: #fff; cursor: pointer;">
+                Confirm
+            </button>
+        </form>
+    </section>
+
+    <footer class="main-footer section">
+        <div class="footer-content">
+            
+            <div class="footer-col brand-col">
+                <div class="footer-logo serif">L'ASTRANCE</div>
+                <p class="footer-tagline">Excellence in the service of emotion.</p>
+                <div class="footer-copyright desktop-only">© 2026 L'ASTRANCE PARIS</div>
+            </div>
+
+            <div class="footer-col">
+                <h4 class="footer-heading">Address</h4>
+                <p>32 Avenue de New York<br>75116 Paris, France</p>
+                <br>
+                <a href="#" class="footer-link hover-trigger">View on map ↗</a>
+            </div>
+
+            <div class="footer-col">
+                <h4 class="footer-heading">Contact</h4>
+                <p>Tuesday — Saturday<br>19:30 — 22:00</p>
+                <br>
+                <a href="tel:+33140508440" class="footer-link hover-trigger">+33 1 40 50 84 40</a><br>
+                <a href="mailto:contact@astranceparis.com" class="footer-link hover-trigger">contact@astranceparis.com</a>
+            </div>
+
+            <div class="footer-col newsletter-col">
+                <h4 class="footer-heading">Privileges</h4>
+                <form onsubmit="event.preventDefault();" class="footer-form">
+                    <input type="email" placeholder="Your Email" class="footer-input hover-trigger">
+                    <button type="submit" class="footer-btn hover-trigger">→</button>
+                </form>
+                <div class="social-links">
+                    <a href="#" class="hover-trigger">INSTAGRAM</a>
+                    <a href="#" class="hover-trigger">MICHELIN GUIDE</a>
+                </div>
+            </div>
+
+            <div class="footer-copyright mobile-only">© 2026 L'ASTRANCE PARIS</div>
+        </div>
+    </footer>
+
+    <script>
+        // 1. Loader Logic
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.querySelector('.loader').classList.add('hidden');
+                initScrollObserver();
+                initSlideshow(); // Start slideshow Section 1
+                initHeroSlideshow(); // Start slideshow Hero (Background)
+            }, 1000);
+        });
+
+        // 2. Full Screen Menu Logic
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuToggle = document.querySelector('.menu-toggle');
+        let isMenuOpen = false;
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            if(isMenuOpen) {
+                menuOverlay.classList.add('active');
+                menuToggle.innerText = "CLOSE -";
+                menuToggle.style.color = "#333"; // Dark on light background
+            } else {
+                menuOverlay.classList.remove('active');
+                menuToggle.innerText = "MENU +";
+                menuToggle.style.color = "#fff";
+            }
+        }
+
+        // 3. Scroll Reveal Observer
+        function initScrollObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if(entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        // 4. Slideshow Logic (Section 1 - About)
+        function initSlideshow() {
+            const slides = document.querySelectorAll('.slide');
+            let currentSlide = 0;
+            setInterval(() => {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }, 5000);
+        }
+
+        // 5. Hero Slideshow Logic (Background Header)
+        function initHeroSlideshow() {
+            const heroSlides = document.querySelectorAll('.hero-bg');
+            let currentHeroSlide = 0;
+            setInterval(() => {
+                heroSlides[currentHeroSlide].classList.remove('active');
+                currentHeroSlide = (currentHeroSlide + 1) % heroSlides.length;
+                heroSlides[currentHeroSlide].classList.add('active');
+            }, 5000); // 5000ms = 5 seconds
+        }
+
+        // 6. PC Animations (Cursor + Hover Image)
+        if (window.matchMedia("(min-width: 769px)").matches) {
+            const cursor = document.getElementById('cursor');
+            const follower = document.getElementById('cursor-follower');
+            const floatingImg = document.getElementById('floatingImg');
+            
+            let mouseX = 0, mouseY = 0, posX = 0, posY = 0;
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+                cursor.style.left = mouseX + 'px';
+                cursor.style.top = mouseY + 'px';
+            });
+
+            // Smooth animation loop
+            function animate() {
+                posX += (mouseX - posX) / 8;
+                posY += (mouseY - posY) / 8;
+                follower.style.left = posX + 'px';
+                follower.style.top = posY + 'px';
+                
+                requestAnimationFrame(animate);
+            }
+            animate();
+
+            // Click effect
+            document.addEventListener('mousedown', () => document.body.classList.add('clicking'));
+            document.addEventListener('mouseup', () => document.body.classList.remove('clicking'));
+
+            // Hover triggers scale cursor
+            document.querySelectorAll('.hover-trigger').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    follower.style.transform = "translate(-50%, -50%) scale(2)";
+                    follower.style.background = "rgba(255,255,255,0.05)";
+                    follower.style.borderColor = "transparent";
+                });
+                el.addEventListener('mouseleave', () => {
+                    follower.style.transform = "translate(-50%, -50%) scale(1)";
+                    follower.style.background = "transparent";
+                    follower.style.borderColor = "rgba(212, 175, 55, 0.5)";
+                });
+            });
+
+            // Menu Image Hover Logic
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('mousemove', (e) => {
+                    floatingImg.src = item.getAttribute('data-img');
+                    floatingImg.classList.add('visible');
+                    floatingImg.style.opacity = 1;
+                    floatingImg.style.left = e.clientX + 'px';
+                    floatingImg.style.top = e.clientY + 'px';
+                    floatingImg.style.transform = `translate(-50%, -50%) rotate(${ (e.clientX - window.innerWidth/2) * 0.01 }deg)`;
+                });
+                item.addEventListener('mouseleave', () => {
+                    floatingImg.style.opacity = 0;
+                });
+            });
+        }
+    </script>
+</body>
+</html>
